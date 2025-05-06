@@ -1,10 +1,7 @@
 package com.bytebeast.api.service
-
 import com.bytebeast.api.dto.UserDTO
-import com.bytebeast.api.dto.UserResponseDTO
 import com.bytebeast.api.model.User
 import com.bytebeast.api.repository.UserRepository
-import org.springframework.http.ResponseEntity
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.util.*
@@ -26,15 +23,15 @@ class UserService(private val userRepository: UserRepository, private val passwo
         return userRepository.save(user)
     }
 
-    fun update(id: Long, user: User): User {
+    fun update(id: Long, userDto: UserDTO): User {
         val existingUser = userRepository.findById(id)
             .orElseThrow { NoSuchElementException("User with id $id not found") }
 
-        val updatedUser = existingUser.copy(
-            username = user.username,
-            password = user.password
+        val user = existingUser.copy(
+            username = userDto.username,
+            password = userDto.password
         )
-        return userRepository.save(updatedUser)
+        return userRepository.save(user)
     }
 
     fun delete(id: Long) = userRepository.deleteById(id)
