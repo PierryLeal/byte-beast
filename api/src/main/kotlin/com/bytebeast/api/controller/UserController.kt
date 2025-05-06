@@ -31,8 +31,8 @@ class UserController(private val userService: UserService) {
     }
 
     @PutMapping("/{id}")
-    fun update(@PathVariable id: Long, @RequestBody user: User): ResponseEntity<User> =
-        ResponseEntity.ok(userService.update(id, user))
+    fun update(@PathVariable id: Long, @RequestBody userDto: UserDTO): ResponseEntity<User> =
+        ResponseEntity.ok(userService.update(id, userDto))
 
     @DeleteMapping("/{id}")
     fun delete(@PathVariable id: Long): ResponseEntity<Void> {
