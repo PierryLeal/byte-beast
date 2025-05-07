@@ -1,8 +1,8 @@
 package com.bytebeast.api.controller
 
+import com.bytebeast.api.dto.PartialUserDTO
 import com.bytebeast.api.dto.UserDTO
 import com.bytebeast.api.dto.UserResponseDTO
-import com.bytebeast.api.model.User
 import com.bytebeast.api.service.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -31,8 +31,10 @@ class UserController(private val userService: UserService) {
     }
 
     @PutMapping("/{id}")
-    fun update(@PathVariable id: Long, @RequestBody userDto: UserDTO): ResponseEntity<User> =
-        ResponseEntity.ok(userService.update(id, userDto))
+    fun update(@PathVariable id: Long, @RequestBody userDto: PartialUserDTO): ResponseEntity<UserResponseDTO> {
+        val updatedUser = userService.update(id, userDto)
+        return ResponseEntity.ok(UserResponseDTO(id = updatedUser.id, username = updatedUser.username))
+    }
 
     @DeleteMapping("/{id}")
     fun delete(@PathVariable id: Long): ResponseEntity<Void> {

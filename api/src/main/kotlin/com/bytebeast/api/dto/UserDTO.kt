@@ -5,6 +5,11 @@ data class UserDTO (
     val password: String
 )
 
+data class PartialUserDTO (
+    val username: String? = null,
+    val password: String? = null
+)
+
 data class UserResponseDTO(
     val id: Long,
     val username: String

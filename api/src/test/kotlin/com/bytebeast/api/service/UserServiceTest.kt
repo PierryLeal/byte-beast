@@ -1,16 +1,20 @@
 package com.bytebeast.api.service
 
+import com.bytebeast.api.dto.PartialUserDTO
+import com.bytebeast.api.dto.UserDTO
 import com.bytebeast.api.model.User
 import com.bytebeast.api.repository.UserRepository
 import io.mockk.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.springframework.security.crypto.password.PasswordEncoder
 import java.util.*
 
 class UserServiceTest {
 
     private val userRepository = mockk<UserRepository>()
-    private val userService = UserService(userRepository)
+    private val passwordEncoder = mockk<PasswordEncoder>()
+    private val userService = UserService(userRepository, passwordEncoder)
 
     @Test
     fun `should return all users`() {
@@ -35,12 +39,20 @@ class UserServiceTest {
 
     @Test
     fun `should create a user`() {
-        val user = User(username = "john", password = "pass")
-        every { userRepository.save(user) } returns user
+        val userDto = UserDTO(username = "john", password = "pass")
+        val hashedPassword = "hashed_pass"
 
-        val result = userService.create(user)
+        every { passwordEncoder.encode("pass") } returns hashedPassword
 
-        assertEquals(user, result)
+        val savedUserSlot = slot<User>()
+        every { userRepository.save(capture(savedUserSlot)) } answers { savedUserSlot.captured }
+
+        val result = userService.create(userDto)
+
+        val savedUser = savedUserSlot.captured
+        assertEquals("john", savedUser.username)
+        assertEquals(hashedPassword, savedUser.password)
+        assertEquals(savedUser, result)
     }
 
     @Test
@@ -50,7 +62,8 @@ class UserServiceTest {
         every { userRepository.findById(1) } returns Optional.of(user)
         every { userRepository.save(any()) } returns updated
 
-        val result = userService.update(1, updated)
+        val userDto = PartialUserDTO(username = updated.username, password = updated.password)
+        val result = userService.update(1, userDto)
 
         assertEquals("doe", result.username)
         assertEquals("1234", result.password)
