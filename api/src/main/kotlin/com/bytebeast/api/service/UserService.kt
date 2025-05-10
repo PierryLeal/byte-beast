@@ -16,7 +16,6 @@ class UserService(private val userRepository: UserRepository, private val passwo
 
     fun findById(id: Long): Optional<User> = userRepository.findById(id)
 
-
     fun create(userDto: UserDTO): User {
         isValidPassword(userDto.password)
         val hashedPassword = passwordEncoder.encode(userDto.password)
