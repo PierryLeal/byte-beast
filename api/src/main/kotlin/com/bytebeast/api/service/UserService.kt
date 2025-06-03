@@ -3,6 +3,8 @@ package com.bytebeast.api.service
 import com.bytebeast.api.dto.PartialUserDTO
 import com.bytebeast.api.dto.UserDTO
 import com.bytebeast.api.exception.BadRequestException
+import com.bytebeast.api.exception.ConflictException
+import com.bytebeast.api.exception.NotFoundException
 import com.bytebeast.api.model.User
 import com.bytebeast.api.repository.UserRepository
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -14,9 +16,14 @@ class UserService(private val userRepository: UserRepository, private val passwo
 
     fun findAll(): List<User> = userRepository.findAll()
 
-    fun findById(id: Long): Optional<User> = userRepository.findById(id)
+    fun findById(id: Long): User {
+        val user = userRepository.findById(id).orElseThrow { NotFoundException("User not found!") }
+        return user
+    }
 
     fun create(userDto: UserDTO): User {
+        if (userRepository.existsByUsername(userDto.username)) throw ConflictException("User already registered!")
+
         isValidPassword(userDto.password)
         val hashedPassword = passwordEncoder.encode(userDto.password)
         val user = User(
@@ -39,7 +46,10 @@ class UserService(private val userRepository: UserRepository, private val passwo
         return userRepository.save(user)
     }
 
-    fun delete(id: Long) = userRepository.deleteById(id)
+    fun delete(id: Long) {
+        val user = userRepository.findById(id).orElseThrow { NotFoundException("User not found!") }
+        userRepository.delete(user)
+    }
 
     fun isValidPassword(password: String?) {
         val regex = Regex("""^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]).{8,}$""")

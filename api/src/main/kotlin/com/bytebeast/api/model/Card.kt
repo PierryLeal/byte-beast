@@ -21,15 +21,15 @@ data class Card(
 
     @ManyToOne
     @JoinColumn(name = "form_id")
-    val formId: Form,
+    val form: Form,
 
     @ManyToOne
     @JoinColumn(name = "attribute_id")
-    val attributeId: Attribute?,
+    val attribute: Attribute?,
 
     @ManyToOne
     @JoinColumn(name = "type_id")
-    val typeId: Types,
+    val type: Types,
 
     @Column
     val dp: Int?,
@@ -57,5 +57,13 @@ data class Card(
 
     @ManyToOne
     @JoinColumn(name = "set_id")
-    val setId: Sets,
+    val set: Sets,
+
+    @ManyToMany
+    @JoinTable(
+        name = "card_colors",
+        joinColumns = [JoinColumn(name = "card_id")],
+        inverseJoinColumns = [JoinColumn(name = "color_id")]
+    )
+    val colors: List<Color> = emptyList()
 )

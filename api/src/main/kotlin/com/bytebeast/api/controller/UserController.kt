@@ -18,9 +18,8 @@ class UserController(private val userService: UserService) {
 
     @GetMapping("/{id}")
     fun getById(@PathVariable id: Long): ResponseEntity<UserResponseDTO> {
-        val user = userService.findById(id).orElse(null)
-        return if (user != null) ResponseEntity.ok(UserResponseDTO(id = user.id, username = user.username))
-        else ResponseEntity.notFound().build()
+        val user = userService.findById(id)
+        return ResponseEntity.ok(UserResponseDTO(id = user.id, username = user.username))
     }
 
     @PostMapping

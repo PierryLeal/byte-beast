@@ -1,10 +1,11 @@
 package com.bytebeast.api.service
 
 import com.bytebeast.api.dto.CardDTO
+import com.bytebeast.api.exception.ConflictException
+import com.bytebeast.api.exception.NotFoundException
 import com.bytebeast.api.model.*
 import com.bytebeast.api.repository.*
 import org.springframework.stereotype.Service
-import java.util.*
 
 @Service
 class CardService(
@@ -18,14 +19,20 @@ class CardService(
     private val colorRepository: ColorRepository,
     private val cardColorRepository: CardColorRepository,
 ) {
-    fun findAll(): List<Card> = cardRepository.findAll()
+    fun findAll(): List<CardDTO> {
+       return cardRepository.findAll().map {it.toDTO()}
+    }
 
-    fun findById(id: String): Optional<Card> = cardRepository.findById(id)
+    fun findById(id: String): CardDTO {
+        val cardResponse = cardRepository.findById(id).orElseThrow {
+            NotFoundException("Card not found!")
+        }
+        return cardResponse.toDTO()
+    }
 
     fun create(cardDto: CardDTO): CardDTO {
-        print(cardDto)
         if (cardRepository.existsById(cardDto.id)) {
-            throw IllegalArgumentException("Card already registered!")
+            throw ConflictException("Card already registered!")
         }
 
         fun getOrCreateLevel(name: String): Level =
@@ -38,18 +45,15 @@ class CardService(
             formRepository.findByName(name).orElseGet { formRepository.save(Form(name = name)) }
 
         fun getOrCreateAttribute(name: String?): Attribute? =
-             if (name.isNullOrBlank()) null else attributeRepository.findByName(name)
+            if (name.isNullOrBlank()) null else attributeRepository.findByName(name)
                 .orElseGet { attributeRepository.save(Attribute(name = name)) }
-
 
         fun getOrCreateType(name: String): Types =
             typeRepository.findByName(name).orElseGet { typeRepository.save(Types(name = name)) }
 
-        fun getOrCreateSet(sets: Sets): Sets =
-            setRepository.findById(sets.id).orElseGet {
-                setRepository.save(Sets(id = sets.id, name = sets.name))
-            }
-
+        fun getOrCreateSet(sets: Sets): Sets = setRepository.findById(sets.id).orElseGet {
+            setRepository.save(Sets(id = sets.id, name = sets.name))
+        }
 
         val savedCard = cardRepository.save(
             Card(
@@ -57,9 +61,9 @@ class CardService(
                 name = cardDto.name,
                 level = getOrCreateLevel(cardDto.level),
                 cardType = getOrCreateCardType(cardDto.cardType),
-                formId = getOrCreateForm(cardDto.form),
-                attributeId = getOrCreateAttribute(cardDto.attribute),
-                typeId = getOrCreateType(cardDto.type),
+                form = getOrCreateForm(cardDto.form),
+                attribute = getOrCreateAttribute(cardDto.attribute),
+                type = getOrCreateType(cardDto.type),
                 dp = cardDto.dp,
                 playCost = cardDto.playCost,
                 digivolveCost1 = cardDto.digivolveCost1,
@@ -68,7 +72,7 @@ class CardService(
                 inheritedEffect = cardDto.inheritedEffect,
                 securityEffect = cardDto.securityEffect,
                 notes = cardDto.notes,
-                setId = getOrCreateSet(cardDto.set)
+                set = getOrCreateSet(cardDto.set)
             )
         )
 
@@ -82,5 +86,30 @@ class CardService(
         return cardDto
     }
 
-    fun delete(id: String) = cardRepository.deleteById(id)
+    fun delete(id: String) {
+        val cardResponse = cardRepository.findById(id).orElseThrow {
+            NotFoundException("Card not found!")
+        }
+        cardRepository.delete(cardResponse)
+    }
+
+    fun Card.toDTO() = CardDTO(
+        id = id,
+        name = name,
+        level = level.name,
+        cardType = cardType.name,
+        form = form.name,
+        attribute = attribute?.name,
+        type = type.name,
+        dp = dp,
+        colors = colors.map { it.name },
+        playCost = playCost,
+        digivolveCost1 = digivolveCost1,
+        digivolveCost2 = digivolveCost2,
+        effect = effect,
+        inheritedEffect = inheritedEffect,
+        securityEffect = securityEffect,
+        notes = notes,
+        set = set
+    )
 }

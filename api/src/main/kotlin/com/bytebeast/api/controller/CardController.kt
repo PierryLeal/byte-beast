@@ -1,7 +1,6 @@
 package com.bytebeast.api.controller
 
 import com.bytebeast.api.dto.CardDTO
-import com.bytebeast.api.model.Card
 import com.bytebeast.api.service.CardService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -12,16 +11,15 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import java.util.Optional
 
 @RestController
 @RequestMapping("/card")
 class CardController(private val cardService: CardService) {
     @GetMapping
-    fun getAll(): ResponseEntity<List<Card>> = ResponseEntity.ok(cardService.findAll())
+    fun getAll(): ResponseEntity<List<CardDTO>> = ResponseEntity.ok(cardService.findAll())
 
     @GetMapping("/{id}")
-    fun getById(@PathVariable id: String): ResponseEntity<Optional<Card>> = ResponseEntity.ok(cardService.findById(id))
+    fun getById(@PathVariable id: String): ResponseEntity<CardDTO> = ResponseEntity.ok(cardService.findById(id))
 
     @PostMapping
     fun create(@RequestBody cardDTO: CardDTO): ResponseEntity<CardDTO> =
